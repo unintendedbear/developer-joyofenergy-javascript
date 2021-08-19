@@ -1,5 +1,6 @@
 const { pricePlans } = require("./price-plans");
-const { usageForAllPricePlans } = require("../usage/usage");
+const { usageForAllPricePlans, usageCost } = require("../usage/usage");
+const { getLastWeekReadings } = require("../readings/readings");
 
 const recommend = (getReadings, req) => {
     const meter = req.params.smartMeterId;
@@ -24,4 +25,16 @@ const compare = (getData, req) => {
     };
 };
 
-module.exports = { recommend, compare };
+const calculateCostForLastWeek = (getReadings, req) => {
+    if(!("plan" in req.query)) {
+        throw new Error("You must specify a plan");
+    }
+    const meter = req.params.smartMeterId,
+        plan = req.query.plan,
+        readingsForLastSevenDays = getLastWeekReadings(getReadings(meter));
+    const costForLastSevenDays = usageCost(readingsForLastSevenDays, pricePlans[plan].rate);
+    
+    return { costForLastSevenDays };
+};
+
+module.exports = { recommend, compare, calculateCostForLastWeek };
