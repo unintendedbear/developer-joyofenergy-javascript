@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "jest",
+    "test": "jest --collectCoverage",
     "test-watch": "jest --watchAll",
     "start": "node src/app",
     "dev": "nodemon --inspect"
