@@ -1,5 +1,5 @@
 const { meters } = require("../meters/meters");
-const { readings } = require("./readings");
+const { getLastWeekReadings, readings } = require("./readings");
 const { readingsData } = require("./readings.data");
 
 describe("readings", () => {
@@ -36,5 +36,47 @@ describe("readings", () => {
         const newLength = getReadings(meters.METER0).length;
 
         expect(length + 3).toEqual(newLength);
+    });
+
+    it("should get the readings for the last seven days for a meter with one reading from today", () => {
+        const now = Math.floor(Date.now() / 1000);
+        const { getReadings } = readings({
+            [meters.METER2]: [
+                { time: now, reading: 0.26785 }
+            ],
+        });
+
+        const expectedReadings = {
+            [meters.METER2]: [
+                { time: now, reading: 0.26785 }
+            ],
+        };
+
+        const result = getLastWeekReadings(getReadings(meters.METER2));
+
+        expect(result).toStrictEqual(expectedReadings[meters.METER2]);
+    });
+
+    it("should get the readings for the last seven days only for a meter with one reading from last month", () => {
+        const now = Math.floor(Date.now() / 1000),
+            nowDateFormat = new Date(now),
+            lastMonth = new Date(nowDateFormat.getFullYear(), nowDateFormat.getMonth() - 1, nowDateFormat.getDate());
+
+        const { getReadings } = readings({
+            [meters.METER2]: [
+                { time: now, reading: 0.26785 },
+                { time: lastMonth.valueOf(), reading: 0.26785 }
+            ],
+        });
+
+        const expectedReadings = {
+            [meters.METER2]: [
+                { time: now, reading: 0.26785 }
+            ],
+        };
+
+        const result = getLastWeekReadings(getReadings(meters.METER2));
+
+        expect(result).toStrictEqual(expectedReadings[meters.METER2]);
     });
 });
