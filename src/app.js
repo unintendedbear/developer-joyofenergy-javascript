@@ -2,7 +2,7 @@ const express = require("express");
 const { readings } = require("./readings/readings");
 const { readingsData } = require("./readings/readings.data");
 const { read, store } = require("./readings/readings-controller");
-const { recommend, compare } = require("./price-plans/price-plans-controller");
+const { recommend, compare, calculateCostForLastWeek } = require("./price-plans/price-plans-controller");
 
 const app = express();
 app.use(express.json());
@@ -23,6 +23,10 @@ app.get("/price-plans/recommend/:smartMeterId", (req, res) => {
 
 app.get("/price-plans/compare-all/:smartMeterId", (req, res) => {
     res.send(compare(getReadings, req));
+});
+
+app.get("/price-plans/cost-7days/:smartMeterId", (req, res) => {
+    res.send(calculateCostForLastWeek(getReadings, req));
 });
 
 const port = process.env.PORT || 8080;
