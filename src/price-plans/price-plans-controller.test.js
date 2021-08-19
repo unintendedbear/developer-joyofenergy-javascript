@@ -1,7 +1,7 @@
 const { meters } = require("../meters/meters");
 const { pricePlanNames } = require("./price-plans");
 const { readings } = require("../readings/readings");
-const { compare, recommend } = require("./price-plans-controller");
+const { compare, recommend, calculateCostForLastWeek } = require("./price-plans-controller");
 
 describe("price plans", () => {
     it("should compare usage cost for all price plans", () => {
@@ -97,5 +97,48 @@ describe("price plans", () => {
         });
 
         expect(recommendation).toEqual(expected);
+    });
+
+    it ("should throw an error when the plan is not specified for the calculation of costs", () => {
+        const { getReadings } = readings({
+            [meters.METER0]: [],
+        });
+
+        expect(() => {
+            calculateCostForLastWeek(getReadings, {
+                params: {
+                    smartMeterId: meters.METER0,
+                },
+                query: {}
+            })
+        }).toThrowError("You must specify a plan");
+    });
+
+    it ("should return the cost of the usage for readings in the last 7 days", () => {
+        const now = Math.floor(Date.now() / 1000),
+            aDayInMilliseconds = 24 * 60 * 60,
+            yesterday = now - aDayInMilliseconds;
+
+        const { getReadings } = readings({
+            [meters.METER0]: [
+                { time: now, reading: 0.26785 },
+                { time: yesterday, reading: 0.26785 }
+            ],
+        });
+
+        const expectedResult = {
+            costForLastSevenDays: 0.26785 / 24 * 10
+        }
+
+        const costResult = calculateCostForLastWeek(getReadings, {
+            params: {
+                smartMeterId: meters.METER0,
+            },
+            query: {
+                plan: "price-plan-0"
+            }
+        });
+
+        expect(costResult).toStrictEqual(expectedResult);
     });
 });
